@@ -532,7 +532,8 @@ silent! colorscheme xoria256
 
 " airline theme: status line and tab line
 if has("termguicolors") && &termguicolors
-  let g:airline_theme='deus'
+  "let g:airline_theme='deus'
+  let g:airline_theme='luna'
 else
   let g:airline_theme='bubblegum'
 endif
@@ -540,7 +541,8 @@ endif
 
 " override more customized colors
 highlight StatusLine    ctermfg=LightGreen
-highlight ColorColumn   ctermbg=52 guibg=#5f0000
+"highlight ColorColumn   ctermbg=52 guibg=#5f0000
+highlight ColorColumn   ctermbg=52 guibg=#2d2d2d
 
 highlight LineNr        ctermfg=248 ctermbg=233 guifg=#a8a8a8 guibg=#121212
 highlight SignColumn    ctermfg=248 ctermbg=233 guifg=#a8a8a8 guibg=#121212
@@ -563,6 +565,7 @@ highlight DiffText      guibg=#721b1b guifg=NONE
 " }}
 
 
+" TODO cursorline slows down on tex files.
 " no underline, current cursor line
 highlight CursorLine    cterm=none
 
