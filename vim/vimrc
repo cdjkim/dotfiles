@@ -251,8 +251,11 @@ if has('nvim')
 endif
 
 " Buffer navigations
-nnoremap [b  :bprevious<CR>
-nnoremap ]b  :bnext<CR>
+"nnoremap [b  :bprevious<CR>
+"nnoremap ]b  :bnext<CR>
+nnoremap <F11> :bprevious<CR>
+nnoremap <F12> :bnext<CR>
+
 
 " Tab navigations
 nnoremap [t  :tabprevious<CR>
