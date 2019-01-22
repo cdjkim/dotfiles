@@ -41,14 +41,16 @@ alias zshrc='vim +cd\ ~/.zsh -O ~/.zsh/zshrc ~/.zpreztorc'
 
 # Tmux ========================================= {{{
 
-# create a new session with name
-alias tmuxnew='tmux new -s'
-# list sessions
-alias tmuxl='tmux list-sessions'
 # tmuxa <session> : attach to <session> (force 256color and detach others)
 alias tmuxa='tmux -2 attach-session -d -t'
-# tmux kill-session -t
-alias tmuxkill='tmux kill-session -t'
+# TMUX aliases
+alias tm='tmux -u' #-u is for unicode functionality to rid of weird prompt space
+alias ta='tmux attach -d' # the -d allows to detach any other clients when you attach, so the screen resolution is maintained
+alias tls='tmux ls'
+alias tat='tmux attach -d -t'
+alias tns='tmux new-session -s'
+alias tk='tmux kill-session -t'
+
 
 # I am lazy, yeah
 alias t='tmuxa'
@@ -219,5 +221,7 @@ function usegpu {
 if (( ! $+commands[tb] )); then
     alias tb='python -m tbtools.tb'
 fi
+
+
 
 # }}}
