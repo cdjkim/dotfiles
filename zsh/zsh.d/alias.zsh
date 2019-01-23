@@ -222,6 +222,55 @@ if (( ! $+commands[tb] )); then
     alias tb='python -m tbtools.tb'
 fi
 
+# LD_PRELOAD=/usr/lib/libtcmalloc.so.4 is to use a different memory malloc than what tensorflow normally uses. 
+alias tfcpu="LD_PRELOAD=/usr/lib/libtcmalloc.so.4 CUDA_VISIBLE_DEVICES=\"\" python"
+alias tf0="LD_PRELOAD=/usr/lib/libtcmalloc.so.4 CUDA_VISIBLE_DEVICES=0 python"
+alias tf1="LD_PRELOAD=/usr/lib/libtcmalloc.so.4 CUDA_VISIBLE_DEVICES=1 python"
+alias tf2="LD_PRELOAD=/usr/lib/libtcmalloc.so.4 CUDA_VISIBLE_DEVICES=2 python"
+alias tf3="LD_PRELOAD=/usr/lib/libtcmalloc.so.4 CUDA_VISIBLE_DEVICES=3 python"
+alias tf4="LD_PRELOAD=/usr/lib/libtcmalloc.so.4 CUDA_VISIBLE_DEVICES=4 python"
+alias tf5="LD_PRELOAD=/usr/lib/libtcmalloc.so.4 CUDA_VISIBLE_DEVICES=5 python"
+alias tf6="LD_PRELOAD=/usr/lib/libtcmalloc.so.4 CUDA_VISIBLE_DEVICES=6 python"
+alias tf7="LD_PRELOAD=/usr/lib/libtcmalloc.so.4 CUDA_VISIBLE_DEVICES=7 python"
+alias tf012="LD_PRELOAD=/usr/lib/libtcmalloc.so.4 CUDA_VISIBLE_DEVICES=0,1,2 python"
+alias tf123="LD_PRELOAD=/usr/lib/libtcmalloc.so.4 CUDA_VISIBLE_DEVICES=1,2,3 python"
+alias tf0123="LD_PRELOAD=/usr/lib/libtcmalloc.so.4 CUDA_VISIBLE_DEVICES=0,1,2,3 python"
+alias tf1234="LD_PRELOAD=/usr/lib/libtcmalloc.so.4 CUDA_VISIBLE_DEVICES=1,2,3,4 python"
+alias tf4567="LD_PRELOAD=/usr/lib/libtcmalloc.so.4 CUDA_VISIBLE_DEVICES=4,5,6,7 python"
+alias tf01="LD_PRELOAD=/usr/lib/libtcmalloc.so.4 CUDA_VISIBLE_DEVICES=0,1 python"
+alias tf12="LD_PRELOAD=/usr/lib/libtcmalloc.so.4 CUDA_VISIBLE_DEVICES=1,2 python"
+alias tf23="LD_PRELOAD=/usr/lib/libtcmalloc.so.4 CUDA_VISIBLE_DEVICES=2,3 python"
+alias tf34="LD_PRELOAD=/usr/lib/libtcmalloc.so.4 CUDA_VISIBLE_DEVICES=3,4 python"
+alias tf45="LD_PRELOAD=/usr/lib/libtcmalloc.so.4 CUDA_VISIBLE_DEVICES=4,5 python"
+alias tf56="LD_PRELOAD=/usr/lib/libtcmalloc.so.4 CUDA_VISIBLE_DEVICES=5,6 python"
+alias tf67="LD_PRELOAD=/usr/lib/libtcmalloc.so.4 CUDA_VISIBLE_DEVICES=6,7 python"
+alias py0="CUDA_VISIBLE_DEVICES=0 python"
+alias py1="CUDA_VISIBLE_DEVICES=1 python"
+alias py2="CUDA_VISIBLE_DEVICES=2 python"
+alias py3="CUDA_VISIBLE_DEVICES=3 python"
+alias py4="CUDA_VISIBLE_DEVICES=4 python"
+alias py5="CUDA_VISIBLE_DEVICES=5 python"
+alias py6="CUDA_VISIBLE_DEVICES=6 python"
+alias py7="CUDA_VISIBLE_DEVICES=7 python"
+
+# Num of files in current directory count.
+alias count_files="ls -1U | wc -l"
+
+alias count_frames="ffprobe -select_streams v -show_streams" # <add file_name> after.
+
+# cd aliases
+alias ..=".."
+alias ...="../.."
+alias ....="../../.."
+
+alias iotop="sudo iotop"
+alias gpukill="kill -9"
+
+alias readonly="chmod 444"
+
+# ctags
+alias ctags="ctags -R --exclude=.git"
+
 
 
 # }}}

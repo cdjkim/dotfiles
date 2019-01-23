@@ -547,7 +547,11 @@ highlight ColorColumn   ctermbg=52 guibg=#2d2d2d
 highlight LineNr        ctermfg=248 ctermbg=233 guifg=#a8a8a8 guibg=#121212
 highlight SignColumn    ctermfg=248 ctermbg=233 guifg=#a8a8a8 guibg=#121212
 
-highlight Normal        ctermfg=255 guifg=white
+"highlight Normal        ctermfg=255 guifg=white
+"highlight Comment       ctermfg=035 guifg=#38B04A
+
+"Using this on AOC monitor due to TN panel dark gradient.
+highlight Normal        ctermbg=000 guibg=#282828
 highlight Comment       ctermfg=035 guifg=#38B04A
 highlight Constant      ctermfg=204 guifg=#ff5f87
 highlight PreProc       ctermfg=219 guifg=#ffafff
@@ -1306,6 +1310,14 @@ if filereadable(expand("\~/.vimrc.local"))
     source \~/.vimrc.local
 endif
 
+" ctags setting remap so that if there is one tag jump to it, else give a
+" choice.
+nnoremap <C-]> g<C-]>
+
+" allows vim to search up to $HOME stopping on the first tag file
+set tags=./tags,tags;$HOME
+
 " }}}
 
 " vim: set ts=2 sts=2 sw=2:
+
