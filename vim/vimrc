@@ -265,7 +265,8 @@ if has('nvim')
   tnoremap ]t <C-\><C-n>:tabnext<CR>
 endif
 
-nnoremap <C-t>     :tabnew<CR>
+" XXX conflict with ctags.
+"nnoremap <C-t>     :tabnew<CR>
 
 nnoremap <silent>   <C-S-tab> :tabprevious<CR>
 nnoremap <silent>   <C-tab>   :tabnext<CR>
@@ -547,12 +548,11 @@ highlight ColorColumn   ctermbg=52 guibg=#2d2d2d
 highlight LineNr        ctermfg=248 ctermbg=233 guifg=#a8a8a8 guibg=#121212
 highlight SignColumn    ctermfg=248 ctermbg=233 guifg=#a8a8a8 guibg=#121212
 
-"highlight Normal        ctermfg=255 guifg=white
-"highlight Comment       ctermfg=035 guifg=#38B04A
+highlight Comment       ctermfg=035 guifg=#38B04A
 
 "Using this on AOC monitor due to TN panel dark gradient.
+highlight Normal        ctermfg=255 guifg=white
 highlight Normal        ctermbg=000 guibg=#282828
-highlight Comment       ctermfg=035 guifg=#38B04A
 highlight Constant      ctermfg=204 guifg=#ff5f87
 highlight PreProc       ctermfg=219 guifg=#ffafff
 highlight SpecialKey    ctermfg=242 guifg=#666666
