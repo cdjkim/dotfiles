@@ -1,6 +1,6 @@
 Dotfiles
 ========
-
+This repo is obtained from https://github.com/wookayin/dotfiles.git for personal use. 
 🏠 Personal dotfiles for \*NIX (Mac OS X and Linux) systems.
 
 Installation
@@ -8,16 +8,8 @@ Installation
 
 ### Clone and Install!
 
-One-liner (if, you trust):
-
 ```bash
-curl -fsSL https://dotfiles.wook.kr/etc/install | bash
-```
-
-An alternative:
-
-```bash
-git clone --recursive https://github.com/wookayin/dotfiles.git ~/.dotfiles
+git clone --recursive https://github.com/cdjkim/dotfiles.git ~/.dotfiles
 cd ~/.dotfiles && python install.py
 ```
 <!--
