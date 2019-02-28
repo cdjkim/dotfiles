@@ -4,6 +4,24 @@ let s:darwin = has('mac')
 let g:plug_window = '-tabnew'
 
 
+" UnPlug: deregister plugin, must be called before plug#end()
+" https://github.com/junegunn/vim-plug/issues/469
+function! s:deregister(repo)
+  let repo = substitute(a:repo, '[\/]\+$', '', '')
+  let name = fnamemodify(repo, ':t:s?\.git$??')
+  call remove(g:plugs, name)
+  call remove(g:plugs_order, index(g:plugs_order, name))
+endfunction
+command! -nargs=1 -bar UnPlug call s:deregister(<args>)
+
+" for neovim plugins (rplugin)
+if has('nvim')
+    function! DoRemote(arg)
+        UpdateRemotePlugins
+    endfunction
+endif
+
+
 call plug#begin('~/.vim/plugged')
 
 " General and Behaviour
@@ -22,6 +40,9 @@ Plug 'ervandew/supertab'
 Plug 'scrooloose/nerdtree'
 Plug 'jistr/vim-nerdtree-tabs'
 Plug 'Xuyuanp/nerdtree-git-plugin'
+if executable('tree')
+    Plug 'mhinz/vim-tree'
+endif
 Plug 'vim-voom/VOoM', { 'on' : ['Voom', 'VoomToggle'] }
 Plug 'tpope/vim-dispatch', { 'tag' : 'v1.1' }
 if has('nvim') || v:version >= 800
@@ -46,6 +67,7 @@ Plug 'cocopon/colorswatch.vim', { 'on' : ['ColorSwatchGenerate'] }
 Plug 'tpope/vim-surround'
 Plug 'tpope/vim-repeat'
 Plug 'Lokaltog/vim-easymotion'
+Plug 'unblevable/quick-scope'
 Plug 'haya14busa/vim-asterisk'
 Plug 'haya14busa/incsearch.vim'
 Plug 'haya14busa/incsearch-fuzzy.vim'
@@ -81,6 +103,10 @@ Plug 'tmux-plugins/vim-tmux'
 Plug 'klen/python-mode', { 'branch': 'develop' } |
   \ Plug 'wookayin/vim-python-enhanced-syntax'
 Plug 'davidhalter/jedi-vim'
+if has('nvim')
+    Plug 'numirias/semshi', { 'do': function('DoRemote') }
+    Plug 'stsewd/isort.nvim', { 'do': function('DoRemote') }
+endif
 
 Plug 'artur-shaik/vim-javacomplete2'
 
@@ -99,22 +125,13 @@ Plug 'xolox/vim-misc'
 Plug 'xolox/vim-lua-ftplugin', { 'for' : ['lua'] }
 
 
+" Completion engine for neovim (deoplete or language server)
 if has('nvim')
-    function! DoRemote(arg)
-        UpdateRemotePlugins
-    endfunction
-
     Plug 'Shougo/deoplete.nvim', { 'do': function('DoRemote') }
-
-    " Python
-    Plug 'zchee/deoplete-jedi'
-    Plug 'numirias/semshi', { 'do': function('DoRemote') }
-    " C/C++
-    Plug 'zchee/deoplete-clang'
-    " vimscript
-    Plug 'machakann/vim-Verdin', { 'for': ['vim'] }
-    " zsh
-    Plug 'zchee/deoplete-zsh', { 'for': ['zsh'] }
+    Plug 'zchee/deoplete-jedi'    " Python
+    Plug 'zchee/deoplete-clang'   " C/C++
+    Plug 'machakann/vim-Verdin', { 'for': ['vim'] }   " vimscript
+    Plug 'zchee/deoplete-zsh', { 'for': ['zsh'] }     " zsh
 
 elseif v:version >= 800
 
@@ -126,8 +143,54 @@ endif
 
 " Asynchronous Lint Engine (ALE)
 if has('nvim') || v:version >= 800
-    Plug 'w0rp/ale', { 'tag': 'v2.1.1' }
+    Plug 'w0rp/ale'
 endif
+
+" *EXPERIMENTAL* language-server support (coc.nvim)
+" Activated if the following conditions are met:
+"    (i) Proper neovim version and python3
+"    (ii) 'node' and 'yarn' are installed
+"    (iii) Directory ~/.config/coc exists
+function s:configure_coc_nvim()
+    if has('nvim') && executable('yarn') && executable('python3') &&
+            \ isdirectory(expand("\~/.config/coc/"))
+    else | return | endif   " do nothing if conditions are not met
+
+    if ! has('nvim-0.3.1')
+        autocmd VimEnter * echohl WarningMsg | echon
+                    \ 'WARNING: Neovim 0.3.1+ is required for coc.nvim. '
+                    \ . '(Try: dotfiles install neovim)'
+        return
+    endif
+
+    " supercedes deoplete :)
+    UnPlug 'Shougo/deoplete.nvim'
+    Plug 'neoclide/coc.nvim', {'do': function('coc#util#install') }
+
+    " automatically install CocExtensions by default
+    let s:coc_plugins_required = ['coc-json', 'coc-pyls']
+    let s:coc_extensions = expand('~/.config/coc/extensions/node_modules/')
+    let s:coc_plugins_to_install = []
+    for ext_name in ['coc-json', 'coc-pyls']
+        if ! isdirectory(s:coc_extensions . ext_name)   " if extensions not installed?
+            call add(s:coc_plugins_to_install, ext_name)
+        endif
+    endfor
+    if ! empty(s:coc_plugins_to_install)
+        execute 'autocmd VimEnter * CocInstall ' . join(s:coc_plugins_to_install)
+    endif
+
+    " Additional dependencies for the coc extensions
+    " [coc-pyls] install pyls into the 'current' python
+    let pyls_output = system("python3 -c 'import pyls' 2> /dev/null")
+    if v:shell_error
+        let s:pip_options = Python3_determine_pip_options()
+        execute 'autocmd VimEnter *.py !python3 -m pip install '
+                    \ . s:pip_options . ' "python-language-server"'
+    endif
+endfunction
+call s:configure_coc_nvim()
+
 
 " Additional, optional local plugins
 if filereadable(expand("\~/.vim/plugins.local.vim"))
@@ -135,3 +198,4 @@ if filereadable(expand("\~/.vim/plugins.local.vim"))
 endif
 
 call plug#end()
+delcom UnPlug

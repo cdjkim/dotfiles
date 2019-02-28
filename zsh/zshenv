@@ -73,6 +73,8 @@ if [ -d $HOME/.miniconda3/bin/ ]; then
   # XXX below crashes with bc's conda package.
   #path=( $path $HOME/.miniconda3/bin )
   . $HOME/.miniconda3/etc/profile.d/conda.sh
+elif [ -d "/usr/local/miniconda3/" ]; then
+  path=( $path "/usr/local/miniconda3/bin" )
 fi
 
 # rust (cargo)

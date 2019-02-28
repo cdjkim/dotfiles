@@ -258,11 +258,11 @@ nnoremap <F12> :bnext<CR>
 
 
 " Tab navigations
-nnoremap [t  :tabprevious<CR>
-nnoremap ]t  :tabnext<CR>
+nnoremap <silent> [t  :tabprevious<CR>
+nnoremap <silent> ]t  :tabnext<CR>
 if has('nvim')
-  tnoremap [t <C-\><C-n>:tabprevious<CR>
-  tnoremap ]t <C-\><C-n>:tabnext<CR>
+  tnoremap <silent> [t <C-\><C-n>:tabprevious<CR>
+  tnoremap <silent> ]t <C-\><C-n>:tabnext<CR>
 endif
 
 " XXX conflict with ctags.
@@ -587,6 +587,7 @@ filetype indent on
 " filetype detections
 au BufRead,BufNewFile /etc/nginx/* if &ft == '' | setfiletype nginx | endif
 au BufRead,BufNewFile *.prototxt if &ft == '' | setfiletype yaml | endif
+au BufRead,BufNewFile *.ipynb if &ft == '' | setfiletype json | endif
 
 autocmd FileType git setlocal foldlevel=1
 
@@ -617,6 +618,11 @@ autocmd InsertLeave * silent! set nopaste
 " better popup menu colors (instead of dark black)
 highlight Pmenu ctermfg=black ctermbg=yellow guifg=black guibg=#ffec99
 highlight PmenuSel ctermfg=red ctermbg=white guifg=red guibg=white gui=bold
+
+" neovim 0.4.0+ : semi-transparent popup menu
+if has('nvim') && has('termguicolors')
+  silent! set pumblend=20
+endif
 
 " http://vim.wikia.com/wiki/Identify_the_syntax_highlighting_group_used_at_the_cursor
 function! ShowSyntaxGroup()
@@ -1027,6 +1033,16 @@ let g:EasyMotion_enter_jump_first = 1
 let g:EasyMotion_space_jump_first = 1
 
 " ---------------------------------------------------------------- }}}
+" quick-scope {{{
+
+" Trigger a highlight in the appropriate direction when pressing these keys:
+let g:qs_highlight_on_keys = ['f', 'F', 't', 'T']
+
+highlight QuickScopePrimary   guifg=#afff5f gui=underline ctermfg=155 cterm=underline
+highlight QuickScopeSecondary guifg=#5fffff gui=underline ctermfg=81  cterm=underline
+
+
+" ---------------------------------------------------------------- }}}
 " vim-easy-align {{{
 
 " Start interactive EasyAlign in visual mode (e.g. vipga)
@@ -1297,6 +1313,19 @@ nnoremap <leader>G :GundoToggle<CR>
 " ---------------------------------------------------------------- }}}
 " tagbar key mappings {{{
 nnoremap <leader>T :TagbarToggle<CR>
+
+" ---------------------------------------------------------------- }}}
+" coc.nvim (languag server completion) {{{
+
+if has_key(g:plugs, 'coc.nvim')
+
+  " Use <c-space> for trigger coc completion (rather than omnicomplete)
+  inoremap <silent><expr> <c-space> coc#refresh()
+
+   command! -nargs=0 CocExtensions :<C-u>CocList extensions<cr>
+
+endif
+
 
 " ---------------------------------------------------------------- }}}
 
