@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-print('''
+'''
    @wookayin's              ███████╗██╗██╗     ███████╗███████╗
    ██████╗  █████╗ ████████╗██╔════╝██║██║     ██╔════╝██╔════╝
    ██╔══██╗██╔══██╗╚══██╔══╝█████╗  ██║██║     █████╗  ███████╗
@@ -10,18 +10,18 @@ print('''
    ╚═════╝  ╚════╝    ╚═╝   ╚═╝     ╚═╝╚══════╝╚══════╝╚══════╝
 
    https://dotfiles.wook.kr/
-''')
+'''
+print(__doc__)  # print logo.
+
 
 import argparse
-parser = argparse.ArgumentParser(description=__doc__)
+parser = argparse.ArgumentParser()
 parser.add_argument('-f', '--force', action="store_true", default=False,
                     help='If set, it will override existing symbolic links')
 parser.add_argument('--skip-vimplug', action='store_true',
                     help='If set, do not update vim plugins.')
 parser.add_argument('--skip-zgen', '--skip-zplug', action='store_true',
                     help='If set, skip zgen updates.')
-parser.add_argument('--enable-coc', action='store_true',
-                    help='Install coc.nvim (highly experimental)')
 
 args = parser.parse_args()
 
@@ -69,7 +69,7 @@ tasks = {
     '~/.gtkrc-2.0' : 'gtkrc-2.0',
 
     # tmux
-    '~/.tmux'     : 'tmux',
+    '~/.tmux'      : 'tmux',
     '~/.tmux.conf' : 'tmux/tmux.conf',
 
     # .config (XDG-style)
@@ -87,7 +87,13 @@ tasks = {
 }
 
 
-from distutils.spawn import find_executable
+try:
+    from distutils.spawn import find_executable
+except ImportError:
+    # In some environments, distutils might not be available.
+    import sys
+    sys.stderr.write("WARNING: distutils not available\n")
+    find_executable = lambda _: False   # type: ignore
 
 
 post_actions = [
@@ -97,7 +103,8 @@ post_actions = [
         if ! readlink $f >/dev/null; then
             echo -e "\033[0;31m\
 WARNING: $f is not a symbolic link to ~/.dotfiles.
-You may want to remove your local folder (~/.vim) and try again?\033[0m"
+Please remove your local folder/file $f and try again.\033[0m"
+            echo -n "(Press any key to continue) "; read user_confirm
             exit 1;
         else
             echo "$f --> $(readlink $f)"
@@ -150,13 +157,34 @@ ERROR: zgen not found. Double check the submodule exists, and you have a valid ~
     ''',
 
     r'''#!/bin/bash
-    # create directory ~/.config/coc if not exists
+    # Setting up for coc.nvim (~/.config/coc, node.js)
+
+    # (i) create ~/.config/coc directory if not exists
+    GREEN="\033[0;32m"; YELLOW="\033[0;33m"; RESET="\033[0m";
     coc_dir="$HOME/.config/coc/"
     if [ ! -d "$coc_dir" ]; then
         mkdir -p "$coc_dir" || exit 1;
         echo "Created: $coc_dir"
+    else
+        echo -e "${GREEN}coc directory:${RESET}   $coc_dir"
     fi
-    ''' if args.enable_coc else ''
+
+    # (ii) node.js
+    node_version=$(node --version 2>/dev/null)
+    if [[ -n "$node_version" ]]; then
+    echo -e "${GREEN}node.js $node_version:${RESET} $(which node)"
+    else
+        echo -e "${YELLOW}Node.js not found. Please install node.js v10.0+ by either:
+
+  (a) Install node on the system (apt-get install nodejs, or brew install nodejs)
+  (b) Install node using nvm (https://github.com/nvm-sh/nvm#installation-and-update)
+  (c) Install locally (i.e. on ~/.local/),
+      $ dotfiles install node           # or,
+      $ curl -sL install-node.now.sh | bash -s -- --prefix=\$HOME/.local --verbose
+${RESET}"
+       exit 1;
+    fi
+    ''',
 
     r'''#!/bin/bash
     # Change default shell to zsh
@@ -203,6 +231,7 @@ EOL
 
 ################# END OF FIXME #################
 
+
 def _wrap_colors(ansicode):
     return (lambda msg: ansicode + str(msg) + '\033[0m')
 GRAY   = _wrap_colors("\033[0;37m")
@@ -218,15 +247,15 @@ import os
 import sys
 import subprocess
 
-if sys.version_info[0] >= 3:  # python3
-    from builtins import input
-    unicode = lambda s, _: str(s)
-else:
-    input = raw_input         # python2
-
 from signal import signal, SIGPIPE, SIG_DFL
-from optparse import OptionParser
 from sys import stderr
+
+if sys.version_info[0] >= 3:  # python3
+    unicode = lambda s, _: str(s)
+    from builtins import input
+else:  # python2
+    input = sys.modules['__builtin__'].raw_input
+
 
 def log(msg, cr=True):
     stderr.write(msg)
@@ -273,7 +302,7 @@ if submodule_issues:
         try:
             git_version = str(subprocess.check_output("""git --version | awk '{print $3}'""", shell=True))
             if git_version >= '2.8': git_submodule_update_cmd += ' --jobs 8'
-        except Exception as e:
+        except Exception as ex:
             pass
         log("Running: %s" % BLUE(git_submodule_update_cmd))
         subprocess.call(git_submodule_update_cmd, shell=True)
@@ -332,7 +361,8 @@ for action in post_actions:
         continue
 
     action_title = action.strip().split('\n')[0].strip()
-    if action_title == '#!/bin/bash': action_title = action.strip().split('\n')[1].strip()
+    if action_title == '#!/bin/bash':
+        action_title = action.strip().split('\n')[1].strip()
 
     log("\n", cr=False)
     log_boxed("Executing: " + action_title, color_fn=CYAN)
@@ -350,10 +380,12 @@ if errors:
         log("   " + YELLOW(e))
     log("\n")
 else:
-    log_boxed("✔︎  You are all set! ", len_adjust=-1,
+    log_boxed("✔  You are all set! ",
               color_fn=GREEN, use_bold=True)
 
 log("- Please restart shell (e.g. " + CYAN("`exec zsh`") + ") if necessary.")
 log("- To install some packages locally (e.g. neovim, tmux), try " + CYAN("`dotfiles install <package>`"))
 log("- If you want to update dotfiles (or have any errors), try " + CYAN("`dotfiles update`"))
 log("\n\n", cr=False)
+
+sys.exit(len(errors))

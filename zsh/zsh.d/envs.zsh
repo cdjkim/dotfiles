@@ -24,6 +24,10 @@ fi
 export FZF_ALT_C_COMMAND='fasd_cd -d -l -R'
 export FZF_ALT_C_OPTS="--preview 'tree -C {} | head -200'"
 
+# Color and appearances
+# use brighter and more visible background color.
+export FZF_DEFAULT_OPTS="--color 'bg+:239'"
+
 # }}}
 
 # Save more history entries
@@ -45,6 +49,14 @@ setopt NO_SHARE_HISTORY
 # See zsh-autoswitch-virtualenv #19
 unsetopt AUTO_NAME_DIRS       # Do not auto add variable-stored paths
 
+# If globs do not match a file, just run the command rather than throwing a no-matches error.
+# This is especially useful for some commands with '^', '~', '#', e.g. 'git show HEAD^1'
+unsetopt NOMATCH
+
+# Editor
+if (( $+commands[nvim] )); then
+  export GIT_EDITOR="nvim"
+fi
 
 #
 # Path Configurations.
