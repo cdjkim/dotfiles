@@ -50,6 +50,15 @@ install_zsh() {
     ~/.local/bin/zsh --version
 }
 
+install_node() {
+    # Install node.js LTS at ~/.local
+    set -e
+    curl -sL install-node.now.sh | bash -s -- --prefix=$HOME/.local --verbose
+
+    echo -e "\n$(which node) : $(node --version)"
+    node --version
+}
+
 install_tmux() {
     # install tmux (and its dependencies such as libevent) locally
     set -e
@@ -192,11 +201,13 @@ install_neovim() {
     NVIM_DOWNLOAD_URL="https://github.com/neovim/neovim/releases/download/nightly/nvim-linux64.tar.gz"
 
     cd $TMP_NVIM_DIR
-    wget -nc $NVIM_DOWNLOAD_URL || true;
+    wget --backups=1 $NVIM_DOWNLOAD_URL      # always overwrite, having only one backup
     tar -xvzf "nvim-linux64.tar.gz"
 
     # copy and merge into ~/.local/bin
-    cp -RTv "nvim-linux64/" "$PREFIX"
+    echo "[*] Copying to $PREFIX ..."
+    cp -RT "nvim-linux64/" "$PREFIX" >/dev/null \
+        || (echo "Copy failed, please kill all nvim instances"; exit 1)
 
     $PREFIX/bin/nvim --version
 }
@@ -204,12 +215,13 @@ install_neovim() {
 
 install_exa() {
     # https://github.com/ogham/exa/releases
-    EXA_DOWNLOAD_URL="https://github.com/ogham/exa/releases/download/v0.8.0/exa-linux-x86_64-0.8.0.zip"
-    EXA_BINARY_SHA1SUM="6d0ced225106bef2c3ec90d8ca6d23eefd73eee5"  # exa-linux-x86_64 v0.8.0
+    EXA_VERSION="0.9.0"
+    EXA_BINARY_SHA1SUM="744e3fdff6581bf84b95cecb00258df8c993dc74"  # exa-linux-x86_64 v0.9.0
+    EXA_DOWNLOAD_URL="https://github.com/ogham/exa/releases/download/v$EXA_VERSION/exa-linux-x86_64-$EXA_VERSION.zip"
     TMP_EXA_DIR="/tmp/$USER/exa/"
 
     wget -nc ${EXA_DOWNLOAD_URL} -P ${TMP_EXA_DIR} || exit 1;
-    cd ${TMP_EXA_DIR} && unzip -o "exa-linux-x86_64-0.8.0.zip" || exit 1;
+    cd ${TMP_EXA_DIR} && unzip -o "exa-linux-x86_64-$EXA_VERSION.zip" || exit 1;
     if [[ "$EXA_BINARY_SHA1SUM" != "$(sha1sum exa-linux-x86_64 | cut -d' ' -f1)" ]]; then
         echo -e "${COLOR_RED}SHA1 checksum mismatch, aborting!${COLOR_NONE}"
         exit 1;
@@ -253,7 +265,7 @@ install_ripgrep() {
     cp "./complete/_rg" $PREFIX/share/zsh/site-functions
 
     $PREFIX/bin/rg --version
-    echo "$(which exa) : $(rg --version)"
+    echo "$(which rg) : $(rg --version)"
 }
 
 install_xsv() {

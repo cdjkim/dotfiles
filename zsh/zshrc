@@ -25,6 +25,10 @@ fi
 # @see https://github.com/zplug/zplug/issues/373
 zstyle ":prezto:module:completion" loaded 'yes'
 
+# Do not put all usernames as possible candidates for tab completion.
+zstyle ':completion:*' users root $USER
+
+
 # virtualenvwrapper -- use lazy load now (see prezto#669)
 if (( $+commands[virtualenvwrapper_lazy.sh] )); then
     source "$commands[virtualenvwrapper_lazy.sh]"
@@ -34,6 +38,14 @@ fi
 if [[ -s "${ZDOTDIR:-$HOME}/.zshrc.local" ]]; then
   source "${ZDOTDIR:-$HOME}/.zshrc.local"
 fi
+
+# Misc plugin configs {{{
+# -----------------------
+
+# fzf-marks
+export FZF_MARKS_JUMP='^b'
+
+# }}}
 
 # ------------------------------------------------------ }}}
 
@@ -58,7 +70,12 @@ if ! zgen saved; then
   fast-theme "XDG:wook"
 
   # misc.
+  # #see ~/.zsh/zsh.d/envs.zsh for configs
   zgen load wookayin/fzf-fasd
+
+  # fzf-marks
+  zgen load urbainvaes/fzf-marks
+
   zgen load zsh-users/zsh-autosuggestions
   if (( $+commands[virtualenvwrapper_lazy.sh] || $+commands[conda] )); then
     # Use my own fork for a while, to support autoswitch into anaconda envs
@@ -107,7 +124,11 @@ if [[ "`uname`" != "Darwin" ]]; then
     . /home/cdjkim/torch/install/bin/torch-activate
 fi
 
-# export cudnn paths.
+# export cuda9
 export LD_LIBRARY_PATH=/usr/local/cuda-9.0/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
 export PATH=/usr/local/cuda/bin${PATH:+:${PATH}}
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda/extras/CUPTI/lib64
+
+# for cuda8
+#export PATH=/usr/local/cuda-8.0/bin${PATH:+:${PATH}}
+#export LD_LIBRARY_PATH=/usr/local/cuda-8.0/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
