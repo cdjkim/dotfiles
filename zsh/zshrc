@@ -68,9 +68,6 @@ if ! zgen saved; then
     zgen load wookayin/anybar-zsh
   fi
 
-  # BC's work on autoswitching with conda env rather than virtual env
-  zgen load "bckim92/zsh-autoswitch-conda"
-
   zgen save
 
 fi
