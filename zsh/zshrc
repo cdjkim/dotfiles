@@ -134,11 +134,6 @@ fi
 # fzf
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
-## Server 
-if [[ "`uname`" != "Darwin" ]]; then
-    # activate torch
-    . /home/cdjkim/torch/install/bin/torch-activate
-fi
 
 # export cuda9
 export LD_LIBRARY_PATH=/usr/local/cuda-9.0/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}

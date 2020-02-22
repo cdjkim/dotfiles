@@ -1,6 +1,6 @@
 Dotfiles
 ========
-This repo is obtained from https://github.com/wookayin/dotfiles.git for personal use. 
+This repo is obtained from https://github.com/wookayin/dotfiles.git for personal use.
 🏠 Personal dotfiles for \*NIX (Mac OS X and Linux) systems.
 
 Installation
@@ -73,6 +73,14 @@ Troubleshooting
 * Does tmux look weird? Make sure that tmux version is [2.3](etc/ubuntu-setup.sh) or higher.
     * If you don't have sudo, you can install it locally by `$ dotfiles install tmux`.
 * Ruby version is shown unwantedly? A simple workaround might be to install [rvm](https://rvm.io/).
+* After installing `pylint`, pytorch ops are better off whitelisted. Add below to `.pylintrc`.
+```
+[TYPECHECK]
+
+# List of members which are set dynamically and missed by Pylint inference
+# system, and so shouldn't trigger E1101 when accessed.
+generated-members=numpy.*, torch.*
+```
 
 
 [install.py]: https://github.com/wookayin/dotfiles/blob/master/install.py
