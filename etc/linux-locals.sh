@@ -100,7 +100,14 @@ install_tmux() {
 install_bazel() {
     set -e
 
-    BAZEL_VER="0.20.0"
+    BAZEL_LATEST_VERSION=$(\
+        curl -L https://api.github.com/repos/bazelbuild/bazel/tags 2>/dev/null | \
+        python -c 'import json, sys; print(json.load(sys.stdin)[0]["name"])'\
+    )
+    test -n $BAZEL_LATEST_VERSION
+    BAZEL_VER="${BAZEL_LATEST_VERSION}"
+    echo -e "${COLOR_YELLOW}Installing Bazel ${BAZEL_VER} ...${COLOR_NONE}"
+
     BAZEL_URL="https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VER}/bazel-${BAZEL_VER}-installer-linux-x86_64.sh"
 
     TMP_BAZEL_DIR="/tmp/$USER/bazel/"
@@ -115,6 +122,11 @@ install_bazel() {
     bash $TMP_BAZEL_DIR/bazel-installer.sh \
         --bin=$HOME/.local/bin \
         --base=$HOME/.bazel
+
+    # print bazel version
+    echo -e "\n\n${COLOR_YELLOW}Bazel at $(which bazel): ${COLOR_NONE}"
+    bazel 2>/dev/null | grep release | xargs
+    echo ""
 }
 
 
@@ -197,17 +209,36 @@ install_neovim() {
     # install neovim nightly
     set -e
 
+    NEOVIM_VERSION="v0.4.3"
+    VERBOSE=""
+    for arg in "$@"; do
+      if [ "$arg" == "--nightly" ]; then
+        NEOVIM_VERSION="nightly";
+      elif [ "$arg" == "-v" ] || [ "$arg" == "--verbose" ]; then
+        VERBOSE="--verbose"
+      fi
+    done
+
+    if [ "${NEOVIM_VERSION}" == "nightly" ]; then
+      echo -e "${COLOR_YELLOW}Installing neovim nightly. ${COLOR_NONE}"
+    else
+      echo -e "${COLOR_YELLOW}Installing neovim stable ${NEOVIM_VERSION}. ${COLOR_NONE}"
+      echo -e "${COLOR_YELLOW}To install a nightly version, add flag: --nightly ${COLOR_NONE}"
+    fi
+    sleep 1;  # allow users to read above comments
+
     TMP_NVIM_DIR="/tmp/$USER/neovim"; mkdir -p $TMP_NVIM_DIR
-    NVIM_DOWNLOAD_URL="https://github.com/neovim/neovim/releases/download/nightly/nvim-linux64.tar.gz"
+    NVIM_DOWNLOAD_URL="https://github.com/neovim/neovim/releases/download/${NEOVIM_VERSION}/nvim-linux64.tar.gz"
 
     cd $TMP_NVIM_DIR
     wget --backups=1 $NVIM_DOWNLOAD_URL      # always overwrite, having only one backup
-    tar -xvzf "nvim-linux64.tar.gz"
+    tar $VERBOSE -xzf "nvim-linux64.tar.gz"
+    ls --color -d $TMP_NVIM_DIR/nvim-linux64
 
     # copy and merge into ~/.local/bin
-    echo "[*] Copying to $PREFIX ..."
-    cp -RT "nvim-linux64/" "$PREFIX" >/dev/null \
-        || (echo "Copy failed, please kill all nvim instances"; exit 1)
+    echo -e "${COLOR_GREEN}[*] Copying to $PREFIX ... ${COLOR_NONE}"
+    cp -RT $VERBOSE "nvim-linux64/" "$PREFIX" >/dev/null \
+        || (echo -e "${COLOR_RED}Copy failed, please kill all nvim instances.${COLOR_NONE}"; exit 1)
 
     $PREFIX/bin/nvim --version
 }
@@ -242,6 +273,7 @@ install_fd() {
     cd $TMP_FD_DIR
     curl -L $FD_DOWNLOAD_URL | tar -xvzf - --strip-components 1
     cp "./fd" $PREFIX/bin
+    mkdir -p $HOME/.local/share/zsh/site-functions
     cp "./autocomplete/_fd" $PREFIX/share/zsh/site-functions
 
     $PREFIX/bin/fd --version
@@ -278,7 +310,7 @@ install_xsv() {
 }
 
 install_bat() {
-    BAT_VERSION="0.8.0"
+    BAT_VERSION="0.12.1"
 
     set -e; set -x
     mkdir -p $PREFIX/bin && cd $PREFIX/bin

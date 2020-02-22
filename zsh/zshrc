@@ -69,6 +69,9 @@ if ! zgen saved; then
   zgen load zdharma/fast-syntax-highlighting
   fast-theme "XDG:wook"
 
+  # More completion support
+  zgen load esc/conda-zsh-completion
+
   # misc.
   # #see ~/.zsh/zsh.d/envs.zsh for configs
   zgen load wookayin/fzf-fasd
@@ -114,6 +117,19 @@ if (( $+commands[iterm-tab-color] )); then
     }
     iterm_tab_color_auto
 fi
+
+# Anaconda3
+# see ~/.zshenv for $CONDA_EXE detection
+# >>> conda initialize >>>
+if [ -n "${CONDA_EXE}" ]; then
+  ${CONDA_EXE} config --set auto_activate_base false
+  __conda_setup="$(${CONDA_EXE} 'shell.zsh' 'hook' 2> /dev/null)"
+  if [ $? -eq 0 ]; then
+      eval "$__conda_setup"
+  fi
+  unset __conda_setup
+fi
+# <<< conda initialize <<<
 
 # fzf
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh

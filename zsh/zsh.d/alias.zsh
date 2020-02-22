@@ -37,7 +37,9 @@ alias vi='vim'
 alias v='vim'
 
 # Just open ~/.vimrc, ~/.zshrc, etc.
-alias vimrc='vim +cd\ ~/.vim -O ~/.vim/vimrc ~/.vim/plugins.vim'
+alias vimrc='vim +Vimrc'
+#alias vimrc='vim +cd\ ~/.vim -O ~/.vim/vimrc ~/.vim/plugins.vim'
+
 alias zshrc='vim +cd\ ~/.zsh -O ~/.zsh/zshrc ~/.zpreztorc'
 
 # Tmux ========================================= {{{
@@ -123,7 +125,9 @@ alias gva='gv --all'
 # Python ======================================= {{{
 
 # anaconda
-alias sa='source activate'
+alias sa='conda activate'   # source activate is deprecated.
+alias ca='conda activate'
+alias deactivate='[[ -n "$CONDA_DEFAULT_ENV" ]] && conda deactivate || deactivate'
 
 # virtualenv
 alias wo='workon'

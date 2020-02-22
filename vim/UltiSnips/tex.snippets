@@ -1,5 +1,6 @@
 # Advanced TeX snippets powered by ultisnip
 # vim: set expandtab:
+# seealso ~/.vim/snippets/tex.snippets
 
 global !p
 def slugify(text):
@@ -36,8 +37,26 @@ def is_math():
         return first != ignore
     except StopIteration:
         return False
+
+def detect_root_texfile():
+    from glob import glob
+    import os.path
+    for f in glob(os.path.join(vim.eval("getcwd()"), "*.tex")):
+        with open(f, "r") as fp:
+            for nr, line in enumerate(fp):
+                if nr > 50: break   # do not read too many lines
+                if '!TEX ROOT =' in line: continue
+                if line.startswith(r'\documentclass{'):
+                    return os.path.basename(f)
+    return "UNKNOWN_ROOT_DOCUMENT.tex"  # Not found
 endglobal
 
+# Preamble
+# ===================
+
+snippet "% !TEX root" "Inserts `% !TEX root = ...` directive"
+%!TEX root = `!p snip.rv = detect_root_texfile()`
+endsnippet
 
 # Common environments
 # ===================
@@ -73,4 +92,34 @@ endsnippet
 context "is_math()"
 snippet bf "\mathbf" wA
 \mathbf{$1}$0
+endsnippet
+
+context "is_math()"
+snippet -> "\rightarrow" wA
+\rightarrow
+endsnippet
+
+context "is_math()"
+snippet <- "\leftarrow" wA
+\leftarrow
+endsnippet
+
+context "is_math()"
+snippet => "\Rightarrow" wA
+\Rightarrow
+endsnippet
+
+context "is_math()"
+snippet <= "\Leftarrow" wA
+\Leftarrow
+endsnippet
+
+#context "is_math()"
+snippet ==> "\Longrightarrow" wA
+\Longrightarrow
+endsnippet
+
+context "is_math()"
+snippet <== "\Longleftarrow" wA
+\Longleftarrow
 endsnippet
