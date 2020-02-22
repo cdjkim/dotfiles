@@ -107,8 +107,8 @@ alias gha='gh --all'
 alias gd='git diff --no-prefix'
 alias gdc='gd --cached --no-prefix'
 alias gds='gd --staged --no-prefix'
-alias gs='git status'
-alias gsu='gs -u'
+#alias gs='git status'
+#alias gsu='gs -u'
 
 # using the vim plugin 'GV'!
 function _vim_gv {
@@ -303,6 +303,31 @@ alias readonly="chmod 444"
 
 # ctags
 alias ctags="ctags -R --exclude=.git"
+
+
+alias picasso="ssh -p7910 -L 127.0.0.1:6009:127.0.0.1:6009 -L 127.0.0.1:6008:127.0.0.1:6008 -L 127.0.0.1:6007:127.0.0.1:6007 -L 127.0.0.1:6006:127.0.0.1:6006 cdjkim@picasso.snu.vision"
+alias davinci="ssh -p7910 dongjoo.kim@davinci.snu.vision"
+#alias medici03="ssh -p7910 -L 127.0.0.1:5006:127.0.0.1:5006 cdjkim@medici03.snu.vision"
+alias medici03="ssh -p7910 -L 127.0.0.1:5006:127.0.0.1:5006 -L 127.0.0.1:5007:127.0.0.1:5007 cdjkim@147.46.219.57"
+alias medici02="ssh -p7910 -L 127.0.0.1:7006:127.0.0.1:7006 -L 127.0.0.1:7007:127.0.0.1:7007 cdjkim@medici02.snu.vision"
+alias medici01="ssh -p7910 -L 127.0.0.1:3006:127.0.0.1:3006 -L 127.0.0.1:3007:127.0.0.1:3007 cdjkim@medici01.snu.vision"
+alias manet="ssh -p7910 -L 127.0.0.1:5006:127.0.0.1:5006 -L 127.0.0.1:5007:127.0.0.1:5007 cdjkim@manet.snu.vision"
+alias miro="ssh -p7910 -L 127.0.0.1:4006:127.0.0.1:4006 cdjk@miro.snu.vision"
+alias millet="ssh -p7910 -L 127.0.0.1:4006:127.0.0.1:4006 cdjkim@millet.snu.vision"
+alias duchamp="ssh -p7910 -L 127.0.0.1:4006:127.0.0.1:4006 cdjkim@duchamp.snu.vision"
+#alias rodin="ssh -L 127.0.0.1:5006:127.0.0.1:5006 -L 127.0.0.1:5007:127.0.0.1:5007 cdjkim@147.46.15.107"
+alias rodin="ssh -p7910 -L 127.0.0.1:5004:127.0.0.1:5004 -L 127.0.0.1:5003:127.0.0.1:5003 cdjkim@rodin.snu.vision"
+alias hongdo="ssh -p7910 -L 127.0.0.1:5006:127.0.0.1:5006 -L 127.0.0.1:5007:127.0.0.1:5007 cdjkim@hongdo.snu.vision"
+alias warhol="ssh -p7910 -L 127.0.0.1:5006:127.0.0.1:5006 -L 127.0.0.1:5007:127.0.0.1:5007 cdjkim@warhol.snu.vision"
+alias dali="ssh -p7910 -L 127.0.0.1:5006:127.0.0.1:5006 -L 127.0.0.1:5007:127.0.0.1:5007 cdjkim@dali.snu.vision"
+alias pollock="ssh -p7910 -L 127.0.0.1:5006:127.0.0.1:5006 -L 127.0.0.1:5007:127.0.0.1:5007 cdjkim@pollock.snu.vision"
+alias gogh="ssh -p7910 -L 127.0.0.1:5006:127.0.0.1:5006 -L 127.0.0.1:5007:127.0.0.1:5007 cdjkim@gogh.snu.vision"
+alias rembrandt="ssh -p7910 -L 127.0.0.1:4006:127.0.0.1:4006 -L 127.0.0.1:4007:127.0.0.1:4007 cdjkim@rembrandt.snu.vision"
+alias namjune="ssh -p7910 -L 127.0.0.1:5006:127.0.0.1:5006 -L 127.0.0.1:5007:127.0.0.1:5007 cdjkim@namjune.snu.vision"
+alias rubens="ssh -p7910 -L 127.0.0.1:5006:127.0.0.1:5006 -L 127.0.0.1:5007:127.0.0.1:5007 cdjkim@rubens.snu.vision"
+alias monet="ssh -p7910 -L 127.0.0.1:5006:127.0.0.1:5006 -L 127.0.0.1:5007:127.0.0.1:5007 cdjkim@monet.snu.vision"
+
+
 
 
 
