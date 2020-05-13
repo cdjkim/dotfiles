@@ -33,6 +33,11 @@ if [[ -z "$LANG" ]]; then
   export LANG='en_US.UTF-8'
 fi
 
+# Fix broken, wrong LC variables (e.g. kitty)
+if [[ "$LC_CTYPE" == "UTF-8" ]]; then
+  export LC_CTYPE='en_US.UTF-8'
+fi
+
 #
 # Paths
 #
@@ -63,19 +68,29 @@ if [ -d $HOME/.dotfiles/bin/ ]; then
   path=( $path $HOME/.dotfiles/bin )
 fi
 
+# Cleanup some anaconda environment variables to avoid messing up in tmux, etc.
+# (these environment variables might be copied and inherited unwantedly)
+unset CONDA_EXE
+unset CONDA_PREFIX
+unset CONDA_DEFAULT_ENV
+unset CONDA_PYTHON_EXE
+unset CONDA_SHLVL
+
 # Miniconda3
-if [ -d $HOME/.miniconda3/bin/ ]; then
-  path=( $path $HOME/.miniconda3/bin )
-  export CONDA_EXE=$HOME/.miniconda3/bin/conda
+if [ -d "$HOME/.miniconda3/bin/" ]; then
+  path=( $path "$HOME/.miniconda3/bin" )
+  export CONDA_EXE="$HOME/.miniconda3/bin/conda"
 elif [ -d "/usr/local/miniconda3/" ]; then
   path=( $path "/usr/local/miniconda3/bin" )
   export CONDA_EXE="/usr/local/miniconda3/bin/conda"
 fi
 
-# Anaconda3 (deprecated, should prefer miniconda3
+# Anaconda3 (deprecated, should prefer miniconda3)
 if [ -d $HOME/.anaconda3/bin/ ]; then
   path=( $path $HOME/.anaconda3/bin )
-  export CONDA_EXE=$HOME/.anaconda3/bin/conda
+  if [[ "$CONDA_EXE" != *"miniconda"* ]]; then
+    export CONDA_EXE=$HOME/.anaconda3/bin/conda
+  fi
 fi
 
 # mac os default install location for miniconda3.(could just change folder location when installing)
@@ -139,7 +154,8 @@ export WORKON_HOME="$HOME/.virtualenvs"
 export VIRTUAL_ENV_DISABLE_PROMPT=1
 
 # ensure that all new virtual environments are isolated from the system site-packages.
-export VIRTUALENVWRAPPER_VIRTUALENV_ARGS='--no-site-packages'
+# (--no-site-packages has been removed since virtualenv >= 20, which has been the default option)
+# export VIRTUALENVWRAPPER_VIRTUALENV_ARGS='--no-site-packages'
 
 # python startup
 export PYTHONSTARTUP=$HOME/.pythonrc.py
@@ -148,21 +164,6 @@ export PYTHONSTARTUP=$HOME/.pythonrc.py
 # Disable dot files in archive
 export COPYFILE_DISABLE=true
 
-
-# added by Miniconda3 4.5.12 installer
-# >>> conda init >>>
-# !! Contents within this block are managed by 'conda init' !!
-#__conda_setup="$(CONDA_REPORT_ERRORS=false '/miniconda3/bin/conda' shell.bash hook 2> /dev/null)"
-#if [ $? -eq 0 ]; then
-    #\eval "$__conda_setup"
-#else
-    #if [ -f "/miniconda3/etc/profile.d/conda.sh" ]; then
-        #. "/miniconda3/etc/profile.d/conda.sh"
-        #CONDA_CHANGEPS1=false conda activate base
-    #else
-        #\export PATH="/miniconda3/bin:$PATH"
-    #fi
-#fi
-#unset __conda_setup
-# <<< conda init <<<
-#
+if [ -f "$HOME/.zshenv.local" ]; then
+  source "$HOME/.zshenv.local"
+fi

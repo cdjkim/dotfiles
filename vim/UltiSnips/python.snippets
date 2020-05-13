@@ -1,4 +1,6 @@
-# vim: set expandtab:
+# This is Ultisnip.
+# seealso ~/.vim/snippets/python.snippets
+# seealso :help snippet-options
 
 global !p
 def collect_ale_lint_codes(linter_name):
@@ -25,16 +27,21 @@ def collect_ale_lint_codes(linter_name):
 
 endglobal
 
-# Add 'pylint: disable=...' marker
-snippet pylint
+snippet TODO  "# TODO"
+# TODO
+endsnippet
+snippet "(#\s*)?pylint"  "'pylint: disable=...' marker" r
 # pylint: disable=${1:`!p snip.rv = collect_ale_lint_codes("pylint")`}
+endsnippet
+snippet "#\s*type"  "'type: ignore' marker (mypy)" r
+# type: ignore
 endsnippet
 
 # Add a typecheck if-raise statement.
 # TODO: auto-retrieve type annotation from the current python context.
 snippet typecheck
 if not isinstance(${1}, ${2:object}):
-	raise TypeError("\`$1\` must be a $2, but given {}".format($2, type($1)))
+	raise TypeError("\`$1\` must be a {}, but given {}".format($2, type($1)))
 endsnippet
 snippet TypeError(
 TypeError("\`$1\` must be a ${2:object}, but given {}".format($2, type($1)))
@@ -44,3 +51,41 @@ snippet rangecheck
 if not ${3:0} <= ${1} < ${2:n}:
 	raise IndexError("Index out of range [{}, {}), but given {}".format($3, $2, $1))
 endsnippet
+snippet print_exception
+traceback.print_exception(*sys.exc_info())
+endsnippet
+snippet pprint
+from pprint import pprint
+endsnippet
+snippet cpprint
+from prettyprinter import cpprint
+endsnippet
+
+# test {{{
+snippet pytest.main
+if __name__ == '__main__':
+	sys.exit(pytest.main(["-s", "-v"] + sys.argv))
+endsnippet
+snippet @pytest.mark.parametrize
+@pytest.mark.parametrize((${1:"arg0", "arg1"}), [
+	(${2:"val0", "val1"}),
+])
+endsnippet
+snippet pytest.param
+pytest.param(${1}, id=None, marks=${3:pytest.mark.xfail})
+endsnippet
+snippet pytest.xfail
+@pytest.mark.xfail(reason="${1:xfail}")
+endsnippet
+snippet unittest
+class Test${1:Example}(unittest.TestCase):
+	def testHello(self):
+		self.assertFalse("Implement me!")
+endsnippet
+# }}}
+
+# ipython {{{
+snippet ipython.system "Import system from ipython (same as !shell execute magic)" b
+from IPython.utils._process_posix import system, getoutput
+endsnippet
+# }}}

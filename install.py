@@ -68,6 +68,9 @@ tasks = {
     # GTK
     '~/.gtkrc-2.0' : 'gtkrc-2.0',
 
+    # kitty
+    '~/.config/kitty/kitty.conf': 'config/kitty/kitty.conf',
+
     # tmux
     '~/.tmux'      : 'tmux',
     '~/.tmux.conf' : 'tmux/tmux.conf',
@@ -96,7 +99,8 @@ except ImportError:
     find_executable = lambda _: False   # type: ignore
 
 
-post_actions = [
+post_actions = []
+post_actions += [
     '''#!/bin/bash
     # Check whether ~/.vim and ~/.zsh are well-configured
     for f in ~/.vim ~/.zsh ~/.vimrc ~/.zshrc; do
@@ -110,12 +114,27 @@ Please remove your local folder/file $f and try again.\033[0m"
             echo "$f --> $(readlink $f)"
         fi
     done
-    ''',
+''']
 
+post_actions += [
+    '''#!/bin/bash
+    # Download command line scripts
+    mkdir -p "$HOME/.local/bin/"
+    _download() {
+        curl -L "$2" > "$1" && chmod +x "$1"
+    }
+    ret=0
+    set -v
+    _download "$HOME/.local/bin/video2gif" "https://raw.githubusercontent.com/wookayin/video2gif/master/video2gif" || ret=1
+    exit $ret;
+''']
+
+post_actions += [
     '''#!/bin/bash
     # Update zgen modules and cache (the init file)
     zsh -c "
-        source ${HOME}/.zshrc                   # source zplug and list plugins
+        # source zplug and list plugins
+        DOTFILES_UPDATE=1 __p9k_instant_prompt_disabled=1 source ${HOME}/.zshrc
         if ! which zgen > /dev/null; then
             echo -e '\033[0;31m\
 ERROR: zgen not found. Double check the submodule exists, and you have a valid ~/.zshrc!\033[0m'
@@ -126,18 +145,26 @@ ERROR: zgen not found. Double check the submodule exists, and you have a valid ~
         zgen reset
         zgen update
     "
-    ''' if not args.skip_zgen else '',
+    ''' if not args.skip_zgen else \
+        '# zgen update (Skipped)'
+]
 
+post_actions += [
     '''#!/bin/bash
     # validate neovim package installation on python2/3 and automatically install if missing
-    source "etc/install-neovim-py.sh"
-    ''',
+    bash "etc/install-neovim-py.sh"
+''']
 
+vim = 'nvim' if find_executable('nvim') else 'vim'
+post_actions += [
     # Run vim-plug installation
-    {'install' : '{vim} +PlugInstall +qall'.format(vim='nvim' if find_executable('nvim') else 'vim'),
-     'update'  : '{vim} +PlugUpdate  +qall'.format(vim='nvim' if find_executable('nvim') else 'vim'),
-     'none'    : ''}['update' if not args.skip_vimplug else 'none'],
+    {'install' : '{vim} +PlugInstall +qall'.format(vim=vim),
+     'update'  : '{vim} +PlugUpdate  +qall'.format(vim=vim),
+     'none'    : '# {vim} +PlugUpdate (Skipped)'.format(vim=vim)
+     }['update' if not args.skip_vimplug else 'none']
+]
 
+post_actions += [
     # Install tmux plugins via tpm
     '~/.tmux/plugins/tpm/bin/install_plugins',
 
@@ -154,8 +181,9 @@ ERROR: zgen not found. Double check the submodule exists, and you have a valid ~
     else
         echo "$(which tmux): $(tmux -V)"
     fi
-    ''',
+''']
 
+post_actions += [
     r'''#!/bin/bash
     # Setting up for coc.nvim (~/.config/coc, node.js)
 
@@ -169,34 +197,24 @@ ERROR: zgen not found. Double check the submodule exists, and you have a valid ~
         echo -e "${GREEN}coc directory:${RESET}   $coc_dir"
     fi
 
-    # (ii) node.js
-    node_version=$(node --version 2>/dev/null)
-    if [[ -n "$node_version" ]]; then
-    echo -e "${GREEN}node.js $node_version:${RESET} $(which node)"
-    else
-        echo -e "${YELLOW}Node.js not found. Please install node.js v10.0+ by either:
+    # (ii) validate or auto-install node.js locally
+    bash "etc/install-node.sh" || exit 1;
+''']
 
-  (a) Install node on the system (apt-get install nodejs, or brew install nodejs)
-  (b) Install node using nvm (https://github.com/nvm-sh/nvm#installation-and-update)
-  (c) Install locally (i.e. on ~/.local/),
-      $ dotfiles install node           # or,
-      $ curl -sL install-node.now.sh | bash -s -- --prefix=\$HOME/.local --verbose
-${RESET}"
-       exit 1;
-    fi
-    ''',
-
+post_actions += [
     r'''#!/bin/bash
     # Change default shell to zsh
-    /bin/zsh --version >/dev/null || (echo -e "Error: /bin/zsh not found. Please install zsh"; exit 1)
+    /bin/zsh --version >/dev/null || (\
+        echo -e "\033[0;31mError: /bin/zsh not found. Please install zsh.\033[0m"; exit 1)
     if [[ ! "$SHELL" = *zsh ]]; then
         echo -e '\033[0;33mPlease type your password if you wish to change the default shell to ZSH\e[m'
         chsh -s /bin/zsh && echo -e 'Successfully changed the default shell, please re-login'
     else
         echo -e "\033[0;32m\$SHELL is already zsh.\033[0m $(zsh --version)"
     fi
-    ''',
+''']
 
+post_actions += [
     r'''#!/bin/bash
     # Create ~/.gitconfig.secret file and check user configuration
     if [ ! -f ~/.gitconfig.secret ]; then
@@ -226,8 +244,7 @@ EOL
     echo -en 'user.name  : '; git config --file ~/.gitconfig.secret user.name
     echo -en 'user.email : '; git config --file ~/.gitconfig.secret user.email
     echo -en '\033[0m';
-    ''',
-]
+''']
 
 ################# END OF FIXME #################
 
@@ -275,6 +292,13 @@ def log_boxed(msg, color_fn=WHITE, use_bold=False, len_adjust=0):
                      "│" + pad_msg   + "│\n" +
                      "└" + ("─" * l) + "┘\n"), cr=False)
 
+def makedirs(target, mode=511, exist_ok=False):
+    try:
+        os.makedirs(target, mode=mode)
+    except OSError as ex:  # py2 has no exist_ok=True
+        import errno
+        if ex.errno == errno.EEXIST and exist_ok: pass
+        else: raise
 
 # get current directory (absolute path)
 current_dir = os.path.abspath(os.path.dirname(__file__))
@@ -343,12 +367,9 @@ for target, source in sorted(tasks.items()):
 
     # make a symbolic link if available
     if not os.path.lexists(target):
-        try:
-            mkdir_target = os.path.split(target)[0]
-            os.makedirs(mkdir_target)
-            log(GREEN('Created directory : %s' % mkdir_target))
-        except:
-            pass
+        mkdir_target = os.path.split(target)[0]
+        makedirs(mkdir_target, exist_ok=True)
+        log(GREEN('Created directory : %s' % mkdir_target))
         os.symlink(source, target)
         log("{:50s} : {}".format(
             BLUE(target),

@@ -11,6 +11,45 @@ COLOR_GREEN="\033[0;32m"
 COLOR_YELLOW="\033[0;33m"
 COLOR_WHITE="\033[1;37m"
 
+
+#---------------------------------------------------------------------------------------------------
+
+_template_github_latest() {
+  set -e
+  local name="$1"
+  local repo="$2"
+  local filename="$3"
+  if [[ -z "$name" ]] || [[ -z "$repo" ]] || [[ -z "$filename" ]]; then
+    echo "Wrong usage"; return 1;
+  fi
+
+  echo -e "${COLOR_YELLOW}Installing $name from $repo ... ${COLOR_NONE}"
+  local download_url=$(\
+    curl -L https://api.github.com/repos/${repo}/releases 2>/dev/null | \
+    python -c "\
+import json, sys, fnmatch;
+J = json.load(sys.stdin);
+for asset in J[0]['assets']:
+  if fnmatch.fnmatch(asset['name'], '$filename'):
+    print(asset['browser_download_url'])
+")
+  echo -e "${COLOR_YELLOW}download_url = ${COLOR_NONE}$download_url"
+  test -n $download_url
+  sleep 0.5
+
+  local tmpdir="/tmp/$USER/$name"
+  local filename="$(basename $download_url)"
+  mkdir -p $tmpdir
+  wget -O "$tmpdir/$filename" "$download_url"
+
+  echo -e "${COLOR_YELLOW}Extracting to: $tmpdir${COLOR_NONE}"
+  cd $tmpdir && tar -xvzf $filename
+
+  echo -e "${COLOR_YELLOW}Copying ...${COLOR_NONE}"
+}
+
+#---------------------------------------------------------------------------------------------------
+
 install_ncurses() {
     # installs ncurses (shared libraries and headers) into local namespaces.
     set -e
@@ -53,10 +92,13 @@ install_zsh() {
 install_node() {
     # Install node.js LTS at ~/.local
     set -e
-    curl -sL install-node.now.sh | bash -s -- --prefix=$HOME/.local --verbose
+    curl -sL install-node.now.sh | bash -s -- --prefix=$HOME/.local --verbose --yes
 
     echo -e "\n$(which node) : $(node --version)"
     node --version
+
+    # install some useful nodejs based utility (~/.local/lib/node_modules)
+    $HOME/.local/bin/npm install -g http-server diff-so-fancy || true;
 }
 
 install_tmux() {
@@ -96,7 +138,6 @@ install_tmux() {
     ~/.local/bin/tmux -V
 }
 
-
 install_bazel() {
     set -e
 
@@ -128,7 +169,6 @@ install_bazel() {
     bazel 2>/dev/null | grep release | xargs
     echo ""
 }
-
 
 install_anaconda3() {
     # installs Anaconda-python3. (Deprecated: Use miniconda)
@@ -172,20 +212,30 @@ install_miniconda() {
     echo "${COLOR_GREEN}All set!${COLOR_NONE}"
 }
 
-
 install_vim() {
     # install latest vim
     set -e
 
-    TMP_VIM_DIR="/tmp/$USER/vim/"; mkdir -p $TMP_VIM_DIR
-    VIM_LATEST_VERSION=$(\
+    # check python3-config
+    local PYTHON3_CONFIGDIR=$(python3-config --configdir)
+    echo -e "${COLOR_YELLOW}$ python3-config --configdir =${COLOR_NONE} $PYTHON3_CONFIGDIR"
+    if [[ "$PYTHON3_CONFIGDIR" =~ (conda|virtualenv|venv) ]]; then
+      echo -e "${COLOR_RED}Error: python3-config reports a conda/virtual environment. Deactivate and try again."
+      return 1;
+    fi
+
+    # grab the lastest vim tarball and build it
+    local TMP_VIM_DIR="/tmp/$USER/vim/"; mkdir -p $TMP_VIM_DIR
+    local VIM_LATEST_VERSION=$(\
         curl -L https://api.github.com/repos/vim/vim/tags 2>/dev/null | \
         python -c 'import json, sys; print(json.load(sys.stdin)[0]["name"])'\
     )
     test -n $VIM_LATEST_VERSION
-    VIM_LATEST_VERSION=${VIM_LATEST_VERSION/v/}    # (e.g) 8.0.1234
+    local VIM_LATEST_VERSION=${VIM_LATEST_VERSION/v/}    # (e.g) 8.0.1234
+    echo -e "${COLOR_GREEN}Installing vim $VIM_LATEST_VERSION ...${COLOR_NONE}"
+    sleep 1
 
-    VIM_DOWNLOAD_URL="https://github.com/vim/vim/archive/v${VIM_LATEST_VERSION}.tar.gz"
+    local VIM_DOWNLOAD_URL="https://github.com/vim/vim/archive/v${VIM_LATEST_VERSION}.tar.gz"
 
     wget -nc ${VIM_DOWNLOAD_URL} -P ${TMP_VIM_DIR} || true;
     cd ${TMP_VIM_DIR} && tar -xvzf v${VIM_LATEST_VERSION}.tar.gz
@@ -193,13 +243,14 @@ install_vim() {
 
     ./configure --prefix="$PREFIX" \
         --with-features=huge \
-        --enable-pythoninterp
+        --enable-python3interp \
+        --with-python3-config-dir="$PYTHON3_CONFIGDIR"
 
     make clean && make -j8 && make install
     ~/.local/bin/vim --version | head -n2
 
     # make sure that all necessary features are shipped
-    if ! (vim --version | grep -q '+python'); then
+    if ! (vim --version | grep -q '+python3'); then
         echo "vim: python is not enabled"
         exit 1;
     fi
@@ -243,7 +294,6 @@ install_neovim() {
     $PREFIX/bin/nvim --version
 }
 
-
 install_exa() {
     # https://github.com/ogham/exa/releases
     EXA_VERSION="0.9.0"
@@ -260,7 +310,6 @@ install_exa() {
     cp "exa-linux-x86_64" "$PREFIX/bin/exa" || exit 1;
     echo "$(which exa) : $(exa --version)"
 }
-
 
 install_fd() {
     # install fd
@@ -283,7 +332,13 @@ install_fd() {
 install_ripgrep() {
     # install ripgrep
     set -e
-    RIPGREP_VERSION="0.10.0"
+    RIPGREP_LATEST_VERSION=$(\
+        curl -L https://api.github.com/repos/BurntSushi/ripgrep/releases 2>/dev/null | \
+        python -c 'import json, sys; J = json.load(sys.stdin); assert J[0]["assets"][0]["name"].startswith("ripgrep"); print(J[0]["name"])'\
+    )
+    test -n $RIPGREP_LATEST_VERSION
+    echo -e "${COLOR_YELLOW}Installing ripgrep ${RIPGREP_LATEST_VERSION} ...${COLOR_NONE}"
+    RIPGREP_VERSION="${RIPGREP_LATEST_VERSION}"
 
     TMP_RIPGREP_DIR="/tmp/$USER/ripgrep"; mkdir -p $TMP_RIPGREP_DIR
     RIPGREP_DOWNLOAD_URL="https://github.com/BurntSushi/ripgrep/releases/download/${RIPGREP_VERSION}/ripgrep-${RIPGREP_VERSION}-x86_64-unknown-linux-musl.tar.gz"
@@ -339,6 +394,28 @@ install_go() {
     echo ""
     echo -e "${COLOR_GREEN}Installed at $HOME/.go${COLOR_NONE}"
     $HOME/.go/bin/go version
+}
+
+install_lazydocker() {
+  set -e
+  _template_github_latest "lazydocker" "jesseduffield/lazydocker" "lazydocker_*_Linux_x86_64.tar.gz"
+  [[ $(pwd) =~ ^/tmp/$USER/ ]]
+
+  cp -v "./lazydocker" $PREFIX/bin
+
+  echo -e "\n\n${COLOR_WHITE}$(which lazydocker)${COLOR_NONE}"
+  $PREFIX/bin/lazydocker --version
+}
+
+install_lazygit() {
+  set -e
+  _template_github_latest "lazygit" "jesseduffield/lazygit" "lazygit_*_Linux_x86_64.tar.gz"
+  [[ $(pwd) =~ ^/tmp/$USER/ ]]
+
+  cp -v "./lazygit" $PREFIX/bin
+
+  echo -e "\n\n${COLOR_WHITE}$(which lazydocker)${COLOR_NONE}"
+  $PREFIX/bin/lazygit --version
 }
 
 
