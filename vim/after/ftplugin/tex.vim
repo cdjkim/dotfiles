@@ -43,7 +43,7 @@ if filereadable('Makefile')
     let &l:makeprg = 'make'
 elseif filereadable(expand("%:p:h") . "/Makefile")
     let &l:makeprg = 'make'
-    call CD_to_file()      " auto-CWD to the file's basepath (see ~/.vimrc)
+    :CD      " auto-CWD to the file's basepath (see ~/.vimrc)
 else
     let &l:makeprg = '(latexmk -pdf -pdflatex="pdflatex -halt-on-error -interaction=nonstopmode -file-line-error -synctex=1" "%:r" && latexmk -c "%:r")'
     "let &l:makeprg = 'xelatex -recorder -halt-on-error -interaction=nonstopmode -file-line-error -synctex=1 "%:r"'
@@ -52,6 +52,10 @@ endif
 " If using neomake, run callbacks after make is done
 function! s:OnNeomakeFinished(context)
     if ! exists(':VimtexView')
+      return
+    endif
+    if ! get(b:, 'neomake_vimtexview_enabled', 1)
+      " disabled temporarily, no VimtexView
       return
     endif
 
@@ -88,6 +92,8 @@ augroup tex_neomake_callback
     autocmd User NeomakeFinished call s:OnNeomakeFinished(g:neomake_hook_context)
 augroup END
 
+command! -buffer -nargs=0 VimtexViewDisable     let b:neomake_vimtexview_enabled = 0
+command! -buffer -nargs=0 VimtexViewEnable      let b:neomake_vimtexview_enabled = 1
 
 
 

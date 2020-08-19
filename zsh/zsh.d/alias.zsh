@@ -1,5 +1,13 @@
 # Custom alias and functions for ZSH
 
+# -------- Utilities ----------
+_version_check() {
+    # _version_check curver targetver: returns true (zero exit code) if $curver >= $targetver
+    curver="$1"; targetver="$2";
+    [ "$targetver" = "$(echo -e "$curver\n$targetver" | sort -V | head -n1)" ]
+}
+# -----------------------------
+
 # Basic
 alias reload!=". ~/.zshrc && echo 'sourced ~/.zshrc' again"
 alias c='command'
@@ -105,9 +113,16 @@ compdef '_hosts' ssh-tmuxa
 # More Git aliases ============================= {{{
 # (overrides prezto's default git/alias.zsh)
 
+GIT_VERSION=$(git --version | awk '{print $3}')
+
 alias gh='git history'
-alias gha='gh --exclude=refs/stash --all'
 alias ghA='gh --all'
+if _version_check $GIT_VERSION "2.0"; then
+  alias gha='gh --exclude=refs/stash --all'
+else
+  alias gha='gh --all'   # git < 1.9 has no --exclude option
+fi
+
 alias gd='git diff --no-prefix'
 alias gdc='gd --cached --no-prefix'
 alias gds='gd --staged --no-prefix'
@@ -335,11 +350,14 @@ function vimpy() {
 if [[ "$(uname)" == "Darwin" ]]; then
 
     # typora
-    function typora   { open -a Typora $@ }
+    function typora   { open -a Typora "$@" }
 
     # skim
-    function skim     { open -a Skim $@ }
+    function skim     { open -a Skim "$@" }
     compdef '_files -g "*.pdf"' skim
+
+    # vimr
+    function vimr     { open -a VimR "$@" }
 
     # terminal-notifier
     function notify   { terminal-notifier -message "$*" }

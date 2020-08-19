@@ -692,6 +692,7 @@ else
   endfunction
 endif
 
+" Command aliases or abbrevations
 function! CommandAlias(aliasname, target)
   " :aliasname => :target  (only applicable at the beginning of the command line)
   exec printf('cnoreabbrev <expr> %s ', a:aliasname)
@@ -699,14 +700,17 @@ function! CommandAlias(aliasname, target)
     \ .printf('("%s") : ("%s"))', escape(a:target, '"'), escape(a:aliasname, '"'))
 endfunction
 
+" some basic command abbrs
+call CommandAlias('tnew', 'tabnew')
+
 " WinDo: Like :windo, but preserves the current window and view.
 function! WinDo(command) abort
   let l:currwin = winnr()
   let l:view = winsaveview()
   try
-    execute printf('windo execute "%s"', escape(a:command, '"'))
+    execute printf('noautocmd windo execute "%s"', escape(a:command, '"'))
   finally
-    execute l:currwin . 'wincmd w'
+    noautocmd execute l:currwin . 'wincmd w'
     call winrestview(l:view)
   endtry
 endfunction
@@ -1069,8 +1073,8 @@ endfunction
 
 " Use z (stay) behavior as default
 if has_key(g:plugs, 'vim-asterisk')
-  "map *  <Plug>(asterisk-z*)
-  "map #  <Plug>(asterisk-z#)
+  map *  <Plug>(asterisk-z*)
+  map #  <Plug>(asterisk-z#)
   map g* <Plug>(asterisk-gz*)
   map g# <Plug>(asterisk-gz#)
 endif
@@ -1158,11 +1162,15 @@ let g:airline_powerline_fonts=1
 " See ~/.vim/plugged/vim-airline/autoload/airline/init.vim -> airline#init#sections() to see defaults {{{
 " -----------------------
 
-call airline#parts#define_minwidth('coc_status', 100)
-call airline#parts#define_minwidth('branch', 120)
-
 autocmd User AirlineAfterInit call AirlineSectionInit()
 function! AirlineSectionInit()
+  " define minwidth for some parts
+  call airline#parts#define_minwidth('coc_status', 100)
+  call airline#parts#define_minwidth('branch', 120)
+
+  " section b: git info (need to call again after define_minwidth/branch)
+  let g:airline_section_b = airline#section#create(['hunks', 'branch'])
+
   " section c: -coc_status
   let g:airline_section_c = airline#section#create([
         \ '%<', 'file', g:airline_symbols.space, 'readonly',
@@ -1320,6 +1328,11 @@ if executable('ag')
   "let $FZF_DEFAULT_COMMAND = '(git ls-files ":/" || ag -l -g "") | LC_COLLATE=C sort | uniq  2> /dev/null'
   let $FZF_DEFAULT_COMMAND = 'ag -l -g "" 2> /dev/null'
 endif
+
+" fzf.vim options
+
+" :Buffers => Jump to the existing window if possible
+let g:fzf_buffers_jump = 1
 
 " Customize built-in commands of 'vim-fzf' (overriden by commands here) {{{
 " For full list, @see https://github.com/junegunn/fzf.vim/blob/master/plugin/fzf.vim#L42
@@ -1854,7 +1867,7 @@ nmap ga <Plug>(EasyAlign)
 let g:indentLine_conceallevel = 1
 
 " conceal values might not work well for tex files (hides some characters)
-let g:indentLine_fileTypeExclude = ['tex', 'markdown', 'pandoc', 'coc-explorer']
+let g:indentLine_fileTypeExclude = ['tex', 'markdown', 'pandoc', 'coc-explorer', 'floaterm', 'tagbar']
 
 " command alias
 command! -nargs=0 ToggleIndentLines   :IndentLinesToggle
@@ -1917,17 +1930,27 @@ let g:deoplete#enable_at_startup = 1
 
 " Register some default omnicomplete functions/patterns
 " to automatically trigger in deoplete {{
-let g:deoplete#omni#functions = get(g:, 'deoplete#omni#functions', {})
-let g:deoplete#omni#input_patterns = get(g:, 'deoplete#omni#input_patterns', {})
+function! s:configure_deoplete_vars()
+  let l:functions = {}
+  let l:input_patterns = {}
 
-let g:deoplete#omni#functions.tex = ['vimtex#complete#omnifunc']
-let g:deoplete#omni#input_patterns.tex =
-      \ '(?:'
-      \ . '\\\w*'
-      \ . ')'
+  let l:functions.tex = ['vimtex#complete#omnifunc']
+  let l:input_patterns.tex =
+        \ '(?:'
+        \ . '\\\w*'
+        \ . ')'
 
-let g:deoplete#omni#functions.lua = 'xolox#lua#omnifunc'
-let g:deoplete#omni#input_patterns.lua = '\w+|[^. *\t][.:]\w*'
+  let l:functions.lua = 'xolox#lua#omnifunc'
+  let l:input_patterns.lua = '\w+|[^. *\t][.:]\w*'
+
+  call deoplete#custom#var('omni', 'functions', l:functions)
+  call deoplete#custom#var('omni', 'input_patterns', l:input_patterns)
+endfunction
+
+try
+  call s:configure_deoplete_vars()
+catch /E117/  " deoplete doesn't exist yet, ignore
+endtry
 
 " }}
 
@@ -2217,8 +2240,11 @@ if has_key(g:plugs, 'vim-airline')
       let w:airline_section_z = ''     " no line numbers, etc.
     endif
   endfunction
-  call airline#remove_statusline_func('FugitiveAirlinePatch')
-  call airline#add_statusline_func('FugitiveAirlinePatch')
+  try
+    call airline#remove_statusline_func('FugitiveAirlinePatch')
+    call airline#add_statusline_func('FugitiveAirlinePatch')
+  catch /E117/  " airline doesn't exist yet
+  endtry
 endif
 
 " ---------------------------------------------------------------- }}}
