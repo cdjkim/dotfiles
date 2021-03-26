@@ -316,6 +316,21 @@ function gcp-instances-fzf() {
 # }}}
 
 
+# FZF magics ======================================= {{{
+
+rgfzf () {
+    # ripgrep
+    if [ ! "$#" -gt 0 ]; then
+        echo "Usage: rgfzf <query>"
+        return 1
+    fi
+    rg --files-with-matches --no-messages "$1" | \
+        fzf --prompt "$1 > " \
+        --reverse --multi --preview "rg --ignore-case --pretty --context 10 '$1' {}"
+}
+
+# }}}
+
 # Etc ======================================= {{{
 
 alias iterm-tab-color="noglob iterm-tab-color"
@@ -348,6 +363,12 @@ function vimpy() {
 
 # open some macOS applications
 if [[ "$(uname)" == "Darwin" ]]; then
+
+    # Force run under Rosetta 2 (for M1 mac)
+    alias rosetta2='arch -x86_64'
+
+    # brew for intel
+    alias ibrew='arch -x86_64 /usr/local/bin/brew'
 
     # typora
     function typora   { open -a Typora "$@" }

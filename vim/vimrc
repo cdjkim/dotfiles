@@ -205,10 +205,12 @@ set matchpairs+=<:>
 set switchbuf+=usetab,split
 
 " diff: ignore whitespaces
-set diffopt+=iwhite
-" use more intuitive, semantically easy-to-parse diff algorithm
-if has("patch-8.1.0360")
-  set diffopt+=internal,algorithm:patience
+if &diff
+  set diffopt+=iwhite
+  " use more intuitive, semantically easy-to-parse diff algorithm
+  if has("patch-8.1.0360")
+    set diffopt+=internal,algorithm:patience
+  endif
 endif
 
 " jump to the last position when reopening a file
@@ -360,6 +362,10 @@ if has('nvim')
   tmap <silent> <C-k> <C-\><C-n>:wincmd k<CR>
   "tmap <C-l> <C-\><C-n><C-l>
   " TODO: <c-l> is for clear screen...?
+
+  " Ctrl-E, Ctrl-Y: Scroll window in terminal-normal mode
+  tmap <silent> <C-e> <C-\><C-n><C-e>
+  tmap <silent> <C-y> <C-\><C-n><C-y>
 endif
 
 if has('nvim')
@@ -652,11 +658,13 @@ vmap  <leader>sf Sf
 " Zoom Tmux
 noremap <silent> <leader>z :silent exec "!tmux resize-pane -Z"<CR>
 
-" Prevent accidental <Ctrl-A> on Tmux
+" Prevent accidental <Ctrl-A> (on tmux) and <Ctrl-X>
 if !empty($TMUX)
   nnoremap <C-a> <nop>
-  " To increase numbers, press <comma>, <c-a>, a ...?
+  nnoremap <C-x> <nop>
+  " To increase/decrease numbers, press <comma>, <c-a>, a ...?
   nnoremap <leader><C-a> <C-a>
+  nnoremap <leader><C-x> <C-x>
 endif
 
 " }}}
@@ -1707,6 +1715,7 @@ let g:floaterm_background = '#1a2a31'
 hi Floaterm         guibg=#1a2a31
 hi FloatermBorder   guibg=#1a2a31 guifg=white
 hi def link FloatermNF        Floaterm
+hi def link FloatermNC        Floaterm
 hi def link FloatermBorderNF  FloatermBorder
 
 command! -bang -nargs=? -complete=shellcmd  T                    :FloatermToggleOrNew<bang> <args>
@@ -1726,14 +1735,14 @@ function! FloatermToggleOrNew(...) abort
     if empty(cmd)
       " when there is no existing floaterm window
       " and no argument given, just open a new floaterm shell.
-      execute ':FloatermNew --name=FT --autoclose'
+      execute ':FloatermNew --name=FT --autoclose=1'
     elseif !bang
       " if argument given but without bang,
       " use it as the command line to execute (e.g. :FT git status)
       execute ':FloatermNew --name=FT ' . cmd
     elseif bang
       " Given bang, (e.g. :FT! git status) run cmd in a (interactive) shell.
-      execute ':FloatermNew --name=FT --autoclose'
+      execute ':FloatermNew --name=FT --autoclose=1'
       let ft_bufnr = floaterm#terminal#get_bufnr('FT')
       call floaterm#terminal#send(ft_bufnr, [cmd])
     endif
@@ -1746,6 +1755,10 @@ endfunction
 let g:floaterm_width = 0.9
 let g:floaterm_height = 0.7
 
+" Turn off auto-hiding of previous floaterm windows,
+" in favor of the autohide autocmd below (only works for 'floating' windows)
+let g:floaterm_autohide = 0
+
 augroup FloatermCustom
   autocmd!
   " when leaving out from floaterm, hide it so that it doesn't cover other windows
@@ -1753,10 +1766,20 @@ augroup FloatermCustom
   autocmd FileType floaterm tmap <buffer> <silent> <C-z>
         \ <C-\><C-n>:wincmd p<CR>
 augroup END
+function! s:floaterm_hide(bufnr)
+  "return floaterm#window#hide_floaterm(a:bufnr)   " API removed (d7196ee0)
+  execute a:bufnr . 'FloatermHide'
+endfunction
 function! s:autohide_floaterm() abort
   if &filetype == 'floaterm'
-    if get(get(b:, 'floaterm_winopts', {}), 'wintype') == 'floating'
-      let l:FuncHide = function('floaterm#window#hide_floaterm', [bufnr('%')])  " neovim or 7.4.1836+
+    " Damn, floaterm keeps changing and breaking things ...
+    " e29e93b2 (2020/8/31): floaterm_winopts -> floaterm_opts
+    " 2b241d7e (2021/1/3):  floaterm_opts -> floaterm_config
+    " 392f3b65 (2021/1/10): No more dict, b:floaterm_wintype, etc. (why such changes?)
+    let l:floaterm_wintype = get(get(b:, 'floaterm_config', get(b:, 'floaterm_opts', {})), 'wintype')
+    if empty(l:floaterm_wintype) | let l:floaterm_wintype = get(b:, 'floaterm_wintype') | endif
+    if l:floaterm_wintype == 'float' || l:floaterm_wintype == 'floating'
+      let l:FuncHide = function('s:floaterm_hide', [bufnr('%')])   " neovim or 7.4.1836+
       call timer_start(0, { -> l:FuncHide() })
     endif
   endif
@@ -1776,6 +1799,32 @@ let g:quickui_preview_h = 25
 " Customize color scheme
 let g:quickui_color_scheme = 'papercol light'
 hi QuickPreview guibg=#262d2d
+
+
+" ---------------------------------------------------------------- }}}
+" vim-xtabline {{{
+
+let g:xtabline_settings = {}
+
+" Use tabs mode if there are 2+ tabs, or buffers mode if there is only one
+if has("patch-7.4.1658") && has_key(g:plugs, 'vim-xtabline')
+  augroup TablineHybridMode
+    autocmd!
+    autocmd TabNew,TabClosed * call s:tabline_automode()
+  augroup end
+  function! s:tabline_automode(...) abort
+    if !v:vim_did_enter | return | endif
+    if tabpagenr('$') >= 2
+      silent XTabMode tabs
+    else
+      silent XTabMode buffers
+    endif
+  endfunction
+
+  " Use 'buffers' as the default xtabline mode (when there is only one tab)
+  let g:xtabline_settings.tabline_modes = ['buffers', 'tabs', 'arglist']
+endif
+
 
 
 " ---------------------------------------------------------------- }}}
@@ -1808,6 +1857,11 @@ let g:NERDTreeChDirMode = 1
 
 " <Leader>N toggles NERDTree (across tab)
 map <Leader>N <plug>NERDTreeTabsToggle<CR>
+
+" By default nerdtree maps <C-j> and <C-k> which I want to reserve for window
+" navigation instead for the sake consistency. Therefore use different keymaps.
+let g:NERDTreeMapJumpNextSibling = '<leader><C-j>'
+let g:NERDTreeMapJumpPrevSibling = '<leader><C-k>'
 
 " Startup Options (do NOT show automatically)
 let g:nerdtree_tabs_open_on_console_startup = 0
@@ -1871,6 +1925,12 @@ let g:indentLine_fileTypeExclude = ['tex', 'markdown', 'pandoc', 'coc-explorer',
 
 " command alias
 command! -nargs=0 ToggleIndentLines   :IndentLinesToggle
+
+" ---------------------------------------------------------------- }}}
+" nvim-scrollview {{{
+
+" Make the scrollbar aware of foldings (see #11).
+let g:scrollview_mode = 'virtual'
 
 " ---------------------------------------------------------------- }}}
 " UltiSnips {{{
@@ -1983,8 +2043,10 @@ let g:lua_define_completion_mappings = 0
 " Specify linters.
 " You may find the configuration file for each linter engine useful.
 "  (e.g. ~/.pylintrc for pylint)
+
+" python: pycodestyle was dropped.
 let g:ale_linters = {
-      \ 'python': ['pylint', 'mypy', 'pycodestyle'],
+      \ 'python': ['pylint', 'mypy' ],
       \}
 
 let g:ale_type_map = {
@@ -2041,15 +2103,17 @@ if has_key(g:plugs, 'coc.nvim')
     let g:pymode_doc_bind = '<leader>PK'
 endif
 
-" lint (code checking):
-" disable in favor of ALE, but only if pylint/pycodestyle exists
-let s:py_linters_exists = executable('pylint') || executable('pycodestyle')
-if has_key(g:plugs, 'ale') && s:py_linters_exists
-  let g:pymode_lint = 0
-else
-  autocmd VimEnter *.py echomsg
-        \ '[Warning] Please install `pylint` and/or `pycodestyle` using pip.' .
-        \ ' As a fallback, pymode linter (slow and outdated) will be used for linting.'
+" pymode lint (code checking):
+" disable in favor of ALE, but only if pylint exists
+let s:py_linters_exists = executable('pylint')
+if has_key(g:plugs, 'ale')
+  if s:py_linters_exists
+    let g:pymode_lint = 0
+  else
+    autocmd VimEnter *.py echomsg
+          \ '[Warning] Please install `pylint` using pip.' .
+          \ ' As a fallback, pymode linter (slow and outdated) will be used for linting.'
+  endif
 endif
 
 " Check code on every save (not on the fly)

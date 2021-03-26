@@ -48,6 +48,7 @@ endif
 if has('nvim-0.4.0') || has('popup')
   Plug 'skywind3000/vim-quickui'
 endif
+Plug 'mg979/vim-xtabline'
 Plug 'ervandew/supertab'
 Plug 'scrooloose/nerdtree'
 Plug 'jistr/vim-nerdtree-tabs'
@@ -82,6 +83,9 @@ Plug 'rking/ag.vim'
 Plug 'kshenoy/vim-signature'
 Plug 'junegunn/vim-easy-align'
 Plug 'Yggdroot/indentLine'
+if exists('##WinScrolled')  " neovim nightly (0.5.0+)
+  Plug 'dstein64/nvim-scrollview', { 'branch': 'main' }
+endif
 
 " Utilities
 Plug 'junegunn/vim-emoji'
