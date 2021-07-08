@@ -206,19 +206,4 @@ conda() {
 conda activate base
 
 
-export PATH=/usr/local/cuda/bin${PATH:+:${PATH}}
-#export PATH=/usr/local/cuda-9.0/bin:$PATH
 
-# for CUDA9.0 & 11.2
-export LD_LIBRARY_PATH="/usr/local/cuda/lib64:/usr/local/cuda-10.2/lib64:/usr/local/cuda/lib64:/usr/local/cuda-10.1/lib64:/usr/local/cuda-11.2/lib64:/usr/local/cuda-9.0/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
-
-#/usr/local/cuda-9.0/lib64:$LD_LIBRARY_PATH
-
-
-# cdjkim Thea 
-#export PATH=/usr/local/bin/Thea${PATH:+:${PATH}}
-
-export PATH=/home/user/3D/Thea/Installations/bin/Thea${PATH:+:${PATH}}
-
-#alias RenderShape="sudo /usr/local/bin/Thea/RenderShape"
-alias Browse3D="sudo /home/user/3D/Thea/Installations/bin/Thea/Browse3D"
