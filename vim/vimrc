@@ -378,10 +378,10 @@ if has('nvim')
 endif
 
 " Buffer navigations
-"nnoremap [b  :bprevious<CR>
-"nnoremap ]b  :bnext<CR>
-nnoremap <F11> :bprevious<CR>
-nnoremap <F12> :bnext<CR>
+nnoremap [b  :bprevious<CR>
+nnoremap ]b  :bnext<CR>
+"nnoremap <F11> :bprevious<CR>
+"nnoremap <F12> :bnext<CR>
 
 
 " Tab navigations
@@ -2568,3 +2568,10 @@ set tags=./tags,tags;$HOME
 " }}}
 
 " vim: set ts=2 sts=2 sw=2 foldmethod=marker:
+"
+
+" DJ highlight my personal command.
+autocmd Syntax * syntax keyword DJMarker DJ containedin=.*Comment,vimCommentTitle,cCommentL
+highlight DJMarker guibg=Green
+highlight DJMarker guifg=White
+

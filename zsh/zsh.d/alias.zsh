@@ -494,6 +494,8 @@ alias rubens="ssh -p7910 -L 127.0.0.1:5006:127.0.0.1:5006 -L 127.0.0.1:5007:127.
 alias monet="ssh -p7910 -L 127.0.0.1:5006:127.0.0.1:5006 -L 127.0.0.1:5007:127.0.0.1:5007 cdjkim@monet.snu.vision"
 
 
+# to lock ubuntu from terminal
+alias lock="gnome-screensaver-command -l"
 
 
 
